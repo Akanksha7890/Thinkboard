@@ -19,7 +19,7 @@ if (process.env.NODE_ENV !== "production") {
   app.use(
     cors({
   origin: "http://localhost:5173",
-  // Frontend deployed url put here , Frontend✅
+ "https://thinkboard-bw5m.onrender.com";
     })
   );
 }
