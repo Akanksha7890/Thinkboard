@@ -5,8 +5,6 @@ import path from "path";
 
 import notesRoutes from "./src/routes/notesRoutes.js";
 import { connectDB } from "./src/config/db.js";
-import rateLimiter from "./src/middleware/rateLimiter.js";
-
 
 dotenv.config();
 
@@ -14,37 +12,47 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 const __dirname = path.resolve();
 
-// middleware
+// Middleware
 if (process.env.NODE_ENV !== "production") {
+  // Development CORS
   app.use(
     cors({
-  origin: "http://localhost:5173",
- "https://thinkboard-bw5m.onrender.com";
+      origin: [
+        "http://localhost:5173",                  // Local frontend
+        "https://thinkboard-bw5m.onrender.com",  // Production frontend
+      ],
+      methods: ["GET", "POST", "PUT", "DELETE"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+    })
+  );
+} else {
+  // Production CORS (optional, allow only your frontend)
+  app.use(
+    cors({
+      origin: "https://thinkboard-bw5m.onrender.com",
+      methods: ["GET", "POST", "PUT", "DELETE"],
+      allowedHeaders: ["Content-Type", "Authorization"],
     })
   );
 }
-app.use(express.json()); // this middleware will parse JSON bodies: req.body
-// app.use(rateLimiter);
 
-// our simple custom middleware
-// app.use((req, res, next) => {
-//   console.log(`Req method is ${req.method} & Req URL is ${req.url}`);
-//   next();
-// });
+app.use(express.json()); // Parse JSON bodies
 
+// API routes
 app.use("/api/notes", notesRoutes);
-  
+
+// Serve frontend in production
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
   app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
+    res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
   });
 }
 
+// Connect DB and start server
 connectDB().then(() => {
   app.listen(PORT, () => {
     console.log("Server started on PORT:", PORT);
   });
 });
-  
